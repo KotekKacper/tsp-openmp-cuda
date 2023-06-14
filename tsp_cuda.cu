@@ -18,7 +18,7 @@ typedef struct LINKED_LIST {
 
 __device__ int global_adj_matrix_flat[500]; 
 
-
+// Kernel function to save the global adjacency matrix flat on the GPU
 __global__ void save_global_adj_matrix_flat(int* input_data, int data_size) {
     int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     if (thread_id < data_size) {
@@ -26,6 +26,7 @@ __global__ void save_global_adj_matrix_flat(int* input_data, int data_size) {
     }
 }
 
+// Kernel function to calculate the cost using CUDA
 __global__ void calculate_cost_cuda(int* subset, int subset_size, int* cost_list, int k, int* combinations, int N) {
     int thread_id = threadIdx.x;
     if (thread_id < subset_size && thread_id != k) {
