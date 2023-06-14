@@ -1,1 +1,5 @@
 .vscode
+tsp_plain
+tsp_openmp
+tsp_cuda
+tsp_combined
