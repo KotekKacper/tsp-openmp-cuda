@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -38,6 +37,7 @@ void generate_combinations(int level, int ***combinations, linked_list *x, int s
         for (int i = 0; i < original_subset_size; i++) {
             int prev = bits & ~(1 << subset[i]);
             int cost_list[2] = {INT_MAX, INT_MAX};
+            #pragma omp parallel for
             for (int j = 0; j < original_subset_size; j++) {
                 int cost = combinations[prev][subset[j]][0] + adj_matrix[subset[j]][subset[i]];
                 if (subset[j] != subset[i] && cost < cost_list[0]) {
@@ -55,18 +55,25 @@ void generate_combinations(int level, int ***combinations, linked_list *x, int s
         // 1. Exclude the current level vertex
         // 2. Include the current level vertex
 
+        #pragma omp task
+        {
         if (level > subset_size) {
             // Exclude the current level vertex (set it to 0) and continue generating combinations
             l1.v = 0;
             l1.parent = x;
             generate_combinations(level - 1, combinations, &l1, subset_size, original_subset_size);
         }
-        if (subset_size > 0) {
-            // Include the current level vertex and continue generating combinations with a reduced subset size
-            l2.v = level;
-            l2.parent = x;
-            generate_combinations(level - 1, combinations, &l2, subset_size - 1, original_subset_size);
         }
+        #pragma omp task
+        {
+            if (subset_size > 0) {
+                // Include the current level vertex and continue generating combinations with a reduced subset size
+                l2.v = level;
+                l2.parent = x;
+                generate_combinations(level - 1, combinations, &l2, subset_size - 1, original_subset_size);
+            }
+        }
+        #pragma omp taskwait  
     }
 }
 
@@ -91,8 +98,6 @@ int tsp(int *path) {
 
     // Generate combinations for subset sizes greater than 1
     for (int subset_size = 2; subset_size < N; subset_size++) {
-        #pragma omp parallel
-        #pragma omp single
         generate_combinations(N - 1, combinations, NULL, subset_size, subset_size);
     }
 
